@@ -3,7 +3,6 @@ import {
   getAllProxies, 
   getActiveProxies, 
   createProxy, 
-  updateProxy, 
   rotateProxySecret,
   addLog,
   type Proxy 
@@ -11,7 +10,6 @@ import {
 
 // Генерация случайного секрета для MTProto прокси
 export function generateSecret(): string {
-  // MTProto прокси используют 32 символа hex (16 байт)
   const randomBytes = crypto.randomBytes(16)
   return randomBytes.toString('hex')
 }
@@ -25,11 +23,7 @@ export function generateFakeTLSSecret(domain: string = 'google.com'): string {
 
 // Создание tg:// ссылки для подключения
 export function generateProxyLink(proxy: Proxy): string {
-  const encodedSecret = proxy.secret.startsWith('dd') || proxy.secret.startsWith('ee') 
-    ? proxy.secret 
-    : proxy.secret
-  
-  return `tg://proxy?server=${proxy.server_ip}&port=${proxy.port}&secret=${encodedSecret}`
+  return `tg://proxy?server=${proxy.server_ip}&port=${proxy.port}&secret=${proxy.secret}`
 }
 
 // Создание t.me ссылки для подключения
@@ -40,34 +34,34 @@ export function generateWebLink(proxy: Proxy): string {
 // Ротация секрета прокси
 export async function rotateSecret(proxyId: number, useFakeTLS: boolean = true, domain: string = 'google.com'): Promise<Proxy | undefined> {
   const newSecret = useFakeTLS ? generateFakeTLSSecret(domain) : generateSecret()
-  return rotateProxySecret(proxyId, newSecret)
+  return await rotateProxySecret(proxyId, newSecret)
 }
 
 // Массовая ротация всех активных прокси
 export async function rotateAllSecrets(useFakeTLS: boolean = true, domain: string = 'google.com'): Promise<number> {
-  const proxies = getActiveProxies()
+  const proxies = await getActiveProxies()
   let rotatedCount = 0
   
   for (const proxy of proxies) {
     const newSecret = useFakeTLS ? generateFakeTLSSecret(domain) : generateSecret()
-    rotateProxySecret(proxy.id, newSecret)
+    await rotateProxySecret(proxy.id, newSecret)
     rotatedCount++
   }
   
-  addLog('bulk_rotation', `Массовая ротация секретов: ${rotatedCount} прокси`)
+  await addLog('bulk_rotation', `Массовая ротация секретов: ${rotatedCount} прокси`)
   return rotatedCount
 }
 
 // Создание нового прокси с автогенерацией секрета
-export function createNewProxy(
+export async function createNewProxy(
   name: string, 
   serverIp: string, 
   port: number = 443, 
   useFakeTLS: boolean = true,
   domain: string = 'google.com'
-): Proxy {
+): Promise<Proxy> {
   const secret = useFakeTLS ? generateFakeTLSSecret(domain) : generateSecret()
-  return createProxy({ name, server_ip: serverIp, port, secret })
+  return await createProxy({ name, server_ip: serverIp, port, secret })
 }
 
 // Статистика прокси
@@ -79,8 +73,8 @@ export interface ProxyStats {
   lastRotation: string | null
 }
 
-export function getProxyStats(): ProxyStats {
-  const proxies = getAllProxies()
+export async function getProxyStats(): Promise<ProxyStats> {
+  const proxies = await getAllProxies()
   
   let lastRotation: string | null = null
   for (const proxy of proxies) {
@@ -128,8 +122,6 @@ export function isValidPort(port: number): boolean {
 
 // Валидация секрета MTProto
 export function isValidSecret(secret: string): boolean {
-  // Обычный секрет: 32 hex символа
-  // Fake TLS секрет: dd + 32 hex + домен в hex
   if (secret.length < 32) return false
   if (secret.startsWith('dd') || secret.startsWith('ee')) {
     return /^[dD]{2}[a-fA-F0-9]{32}[a-fA-F0-9]*$/.test(secret)

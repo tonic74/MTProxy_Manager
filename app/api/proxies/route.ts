@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { 
   getAllProxies, 
   getActiveProxies, 
-  createProxy 
+  createProxy,
+  initializeDatabase
 } from '@/lib/db'
 import { 
   generateSecret, 
@@ -15,12 +16,12 @@ import {
 
 export async function GET(request: Request) {
   try {
+    await initializeDatabase()
     const { searchParams } = new URL(request.url)
     const activeOnly = searchParams.get('active') === 'true'
     
-    const proxies = activeOnly ? getActiveProxies() : getAllProxies()
+    const proxies = activeOnly ? await getActiveProxies() : await getAllProxies()
     
-    // Добавляем ссылки к каждому прокси
     const proxiesWithLinks = proxies.map(proxy => ({
       ...proxy,
       tg_link: generateProxyLink(proxy),
@@ -39,10 +40,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await initializeDatabase()
     const body = await request.json()
     const { name, server_ip, port = 443, secret, use_fake_tls = true, domain = 'google.com' } = body
 
-    // Валидация
     if (!name || !server_ip) {
       return NextResponse.json(
         { success: false, error: 'Имя и IP адрес сервера обязательны' },
@@ -64,10 +65,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Генерируем секрет если не передан
     const proxySecret = secret || (use_fake_tls ? generateFakeTLSSecret(domain) : generateSecret())
 
-    const proxy = createProxy({
+    const proxy = await createProxy({
       name,
       server_ip,
       port,

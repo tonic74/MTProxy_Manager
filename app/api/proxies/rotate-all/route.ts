@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
+import { initializeDatabase } from '@/lib/db'
 import { rotateAllSecrets } from '@/lib/proxy-manager'
 
 export async function POST(request: Request) {
   try {
+    await initializeDatabase()
     const body = await request.json().catch(() => ({}))
     const { use_fake_tls = true, domain = 'google.com' } = body
 

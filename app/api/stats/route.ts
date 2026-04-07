@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getProxyStats } from '@/lib/proxy-manager'
-import { getLogs } from '@/lib/db'
+import { getLogs, initializeDatabase } from '@/lib/db'
 
 export async function GET() {
   try {
-    const stats = getProxyStats()
-    const recentLogs = getLogs(10)
+    await initializeDatabase()
+    const stats = await getProxyStats()
+    const recentLogs = await getLogs(10)
 
     return NextResponse.json({ 
       success: true, 

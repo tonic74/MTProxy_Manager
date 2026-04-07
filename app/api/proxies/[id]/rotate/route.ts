@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { initializeDatabase } from '@/lib/db'
 import { rotateSecret, generateProxyLink, generateWebLink } from '@/lib/proxy-manager'
 
 export async function POST(
@@ -6,6 +7,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await initializeDatabase()
     const { id } = await params
     const proxyId = parseInt(id)
     

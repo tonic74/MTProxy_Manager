@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { 
   getProxyById, 
   updateProxy, 
-  deleteProxy 
+  deleteProxy,
+  initializeDatabase
 } from '@/lib/db'
 import { 
   isValidIP, 
@@ -16,6 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await initializeDatabase()
     const { id } = await params
     const proxyId = parseInt(id)
     
@@ -26,7 +28,7 @@ export async function GET(
       )
     }
 
-    const proxy = getProxyById(proxyId)
+    const proxy = await getProxyById(proxyId)
     
     if (!proxy) {
       return NextResponse.json(
@@ -57,6 +59,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await initializeDatabase()
     const { id } = await params
     const proxyId = parseInt(id)
     
@@ -70,7 +73,6 @@ export async function PATCH(
     const body = await request.json()
     const { name, server_ip, port, secret, status } = body
 
-    // Валидация если переданы соответствующие поля
     if (server_ip && !isValidIP(server_ip)) {
       return NextResponse.json(
         { success: false, error: 'Неверный формат IP адреса' },
@@ -92,7 +94,7 @@ export async function PATCH(
       )
     }
 
-    const proxy = updateProxy(proxyId, { name, server_ip, port, secret, status })
+    const proxy = await updateProxy(proxyId, { name, server_ip, port, secret, status })
     
     if (!proxy) {
       return NextResponse.json(
@@ -123,6 +125,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await initializeDatabase()
     const { id } = await params
     const proxyId = parseInt(id)
     
@@ -133,7 +136,7 @@ export async function DELETE(
       )
     }
 
-    const deleted = deleteProxy(proxyId)
+    const deleted = await deleteProxy(proxyId)
     
     if (!deleted) {
       return NextResponse.json(
