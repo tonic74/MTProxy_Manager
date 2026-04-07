@@ -23,10 +23,11 @@ AcKx5ZzCotRghOYnl7p1W2DwEFyPrU8T
 ```
 Придумайте надежный пароль для входа в админ-панель.
 
-### DATABASE_PATH
+### DATABASE_URL
 ```
-./data/proxy.db
+postgresql://user:password@host:port/database
 ```
+Создайте проект на https://neon.tech и скопируйте connection string.
 
 ## Шаг 3: Deploy
 

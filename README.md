@@ -153,7 +153,7 @@ systemctl status telegram-bot
 │   └── page.tsx           # Главная страница
 ├── components/            # React компоненты
 ├── lib/                   # Утилиты и логика
-│   ├── db.ts             # SQLite база данных
+│   ├── db.ts             # PostgreSQL база данных
 │   └── proxy-manager.ts  # Управление прокси
 ├── server-scripts/        # Скрипты для сервера
 │   ├── setup-mtproxy.sh  # Установщик MTProxy
