@@ -1,0 +1,43 @@
+# Docker Compose для MTProto Proxy
+# Разместите этот файл на вашем сервере в Германии
+
+version: '3.8'
+
+services:
+  mtproxy:
+    image: telegrammessenger/proxy:latest
+    container_name: mtproxy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    environment:
+      # Секрет будет сгенерирован при первом запуске
+      # Или вы можете указать свой: SECRET=ваш_32_символьный_hex_секрет
+      - TAG=your_promo_tag_optional
+    volumes:
+      - ./mtproxy-data:/data
+    networks:
+      - mtproxy-net
+
+networks:
+  mtproxy-net:
+    driver: bridge
+
+# Альтернативная конфигурация с Fake TLS (рекомендуется)
+# Раскомментируйте секцию ниже вместо верхней
+
+# services:
+#   mtproxy-faketls:
+#     image: ghcr.io/wukko/mtproxy-docker:latest
+#     container_name: mtproxy-faketls
+#     restart: unless-stopped
+#     ports:
+#       - "443:443"
+#     environment:
+#       # Секрет автоматически генерируется с Fake TLS
+#       - FAKE_TLS_DOMAIN=google.com
+#       - PORT=443
+#     volumes:
+#       - ./mtproxy-data:/data
+#     networks:
+#       - mtproxy-net
