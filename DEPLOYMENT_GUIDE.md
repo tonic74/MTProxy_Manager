@@ -28,9 +28,14 @@
 - **Value**: `<придумайте надежный пароль>`
 - Пример: `MySecurePass2026!`
 
-#### Переменная 3: DATABASE_PATH
-- **Name**: `DATABASE_PATH`
-- **Value**: `./data/proxy.db`
+#### Переменная 3: DATABASE_URL
+- **Name**: `DATABASE_URL`
+- **Value**: `postgresql://user:password@host:port/database`
+
+Для получения DATABASE_URL:
+1. Создайте проект на https://neon.tech
+2. Создайте базу данных `mtproxy`
+3. Скопируйте connection string из панели Neon
 
 ### 4. Деплой
 

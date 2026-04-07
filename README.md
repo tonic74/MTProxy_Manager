@@ -9,7 +9,7 @@
 - 🔄 Автоматическая ротация секретов
 - 🔐 Fake TLS маскировка трафика
 - 📊 Мониторинг и статистика
-- 🗄️ SQLite база данных
+- 🗄️ PostgreSQL база данных (Neon)
 
 ## Быстрый старт
 
@@ -37,7 +37,7 @@
 ```
 API_SECRET=ваш_случайный_ключ_минимум_32_символа
 ADMIN_PASSWORD=ваш_надежный_пароль
-DATABASE_PATH=./data/proxy.db
+DATABASE_URL=postgresql://...
 ```
 
 **Генерация API_SECRET:**
@@ -167,7 +167,7 @@ systemctl status telegram-bot
 - **Frontend**: Next.js 16, React 19, TypeScript
 - **UI**: shadcn/ui, Tailwind CSS
 - **Backend**: Next.js API Routes
-- **Database**: SQLite (better-sqlite3)
+- **Database**: PostgreSQL (Neon)
 - **Proxy**: MTProxy (Docker)
 - **Bot**: Telegraf
 - **Hosting**: Vercel (панель), VPS (прокси + бот)

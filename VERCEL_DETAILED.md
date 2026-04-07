@@ -81,17 +81,22 @@
 
 3. Нажмите **"Add"**
 
-### 3.4 Добавьте третью переменную: DATABASE_PATH
+### 3.4 Добавьте третью переменную: DATABASE_URL
 
 1. В поле **"Key"** введите:
    ```
-   DATABASE_PATH
+   DATABASE_URL
    ```
 
-2. В поле **"Value"** введите:
+2. В поле **"Value"** введите connection string от Neon:
    ```
-   ./data/proxy.db
+   postgresql://user:password@host:port/database
    ```
+
+   Для получения DATABASE_URL:
+   - Создайте проект на https://neon.tech
+   - Создайте базу данных `mtproxy`
+   - Скопируйте connection string из панели Neon
 
 3. Нажмите **"Add"**
 
@@ -100,7 +105,7 @@
 Должно быть 3 переменные:
 - ✅ API_SECRET = AcKx5ZzCotRghOYnl7p1W2DwEFyPrU8T
 - ✅ ADMIN_PASSWORD = (ваш пароль)
-- ✅ DATABASE_PATH = ./data/proxy.db
+- ✅ DATABASE_URL = postgresql://...
 
 ---
 
