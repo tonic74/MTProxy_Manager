@@ -37,6 +37,7 @@ export function AddProxyDialog({ open, onOpenChange, onSuccess, editProxy }: Add
   const [name, setName] = useState('')
   const [serverIp, setServerIp] = useState('')
   const [port, setPort] = useState('443')
+  const [secret, setSecret] = useState('')
   const [useFakeTLS, setUseFakeTLS] = useState(true)
   const [domain, setDomain] = useState('google.com')
 
@@ -47,10 +48,12 @@ export function AddProxyDialog({ open, onOpenChange, onSuccess, editProxy }: Add
       setName(editProxy.name)
       setServerIp(editProxy.server_ip)
       setPort(editProxy.port.toString())
+      setSecret(editProxy.secret)
     } else {
       setName('')
       setServerIp('')
       setPort('443')
+      setSecret('')
       setUseFakeTLS(true)
       setDomain('google.com')
     }
@@ -65,8 +68,15 @@ export function AddProxyDialog({ open, onOpenChange, onSuccess, editProxy }: Add
       const method = isEditing ? 'PATCH' : 'POST'
       
       const body = isEditing
-        ? { name, server_ip: serverIp, port: parseInt(port) }
-        : { name, server_ip: serverIp, port: parseInt(port), use_fake_tls: useFakeTLS, domain }
+        ? { name, server_ip: serverIp, port: parseInt(port), secret }
+        : { 
+            name, 
+            server_ip: serverIp, 
+            port: parseInt(port), 
+            secret: secret || undefined,
+            use_fake_tls: useFakeTLS, 
+            domain 
+          }
 
       const response = await fetch(url, {
         method,
@@ -139,6 +149,19 @@ export function AddProxyDialog({ open, onOpenChange, onSuccess, editProxy }: Add
                 max={65535}
                 required
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="secret">Секрет (опционально)</Label>
+              <Input
+                id="secret"
+                placeholder="Оставьте пустым для автогенерации"
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Введите существующий секрет или оставьте пустым для генерации нового
+              </p>
             </div>
 
             {!isEditing && (
