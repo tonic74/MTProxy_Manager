@@ -1,4 +1,12 @@
-import { sql } from '@vercel/postgres'
+import postgres from 'postgres'
+
+const sql = postgres(process.env.DATABASE_URL!, {
+  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+  max: 10,
+  connect_timeout: 10,
+})
+
+export { sql }
 
 export interface Proxy {
   id: number
@@ -108,39 +116,30 @@ export async function createProxy(data: { name: string; server_ip: string; port:
 }
 
 export async function updateProxy(id: number, data: Partial<{ name: string; server_ip: string; port: number; secret: string; status: string }>): Promise<Proxy | undefined> {
-  const updates: string[] = []
-  const values: any[] = []
-  let paramIndex = 1
+  const updates: ReturnType<typeof sql>[] = []
 
   if (data.name !== undefined) {
-    updates.push(`name = $${paramIndex++}`)
-    values.push(data.name)
+    updates.push(sql`name = ${data.name}`)
   }
   if (data.server_ip !== undefined) {
-    updates.push(`server_ip = $${paramIndex++}`)
-    values.push(data.server_ip)
+    updates.push(sql`server_ip = ${data.server_ip}`)
   }
   if (data.port !== undefined) {
-    updates.push(`port = $${paramIndex++}`)
-    values.push(data.port)
+    updates.push(sql`port = ${data.port}`)
   }
   if (data.secret !== undefined) {
-    updates.push(`secret = $${paramIndex++}`)
-    values.push(data.secret)
+    updates.push(sql`secret = ${data.secret}`)
   }
   if (data.status !== undefined) {
-    updates.push(`status = $${paramIndex++}`)
-    values.push(data.status)
+    updates.push(sql`status = ${data.status}`)
   }
 
   if (updates.length === 0) return getProxyById(id)
 
-  updates.push(`updated_at = NOW()`)
-  values.push(id)
+  updates.push(sql`updated_at = NOW()`)
 
-  const query = `UPDATE proxies SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`
-  const { rows } = await sql.query(query, values)
-  
+  const { rows } = await sql`UPDATE proxies SET ${sql.join(updates, sql`, `)} WHERE id = ${id} RETURNING *`
+
   await addLog('proxy_updated', `Обновлен прокси ID: ${id}`)
   return rows[0] as Proxy | undefined
 }
