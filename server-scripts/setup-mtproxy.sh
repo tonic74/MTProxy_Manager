@@ -78,25 +78,7 @@ echo "Секрет: $SECRET"
 echo ""
 
 # Создание docker-compose.yml
-if [[ $use_faketls =~ ^[Yy]$ ]]; then
-    cat > docker-compose.yml << EOF
-version: '3.8'
-
-services:
-  mtproxy:
-    image: ghcr.io/wukko/mtproxy-docker:latest
-    container_name: mtproxy
-    restart: unless-stopped
-    ports:
-      - "${port}:443"
-    environment:
-      - SECRET=${SECRET}
-      - FAKE_TLS_DOMAIN=${domain}
-    volumes:
-      - ./data:/data
-EOF
-else
-    cat > docker-compose.yml << EOF
+cat > docker-compose.yml << EOF
 version: '3.8'
 
 services:
@@ -111,7 +93,6 @@ services:
     volumes:
       - ./data:/data
 EOF
-fi
 
 # Создание директории для данных
 mkdir -p data

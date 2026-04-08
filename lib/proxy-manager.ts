@@ -14,11 +14,11 @@ export function generateSecret(): string {
   return randomBytes.toString('hex')
 }
 
-// Генерация секрета с fake TLS (dd prefix)
+// Генерация секрета с fake TLS (ee prefix)
 export function generateFakeTLSSecret(domain: string = 'google.com'): string {
   const randomPart = crypto.randomBytes(16).toString('hex')
   const domainHex = Buffer.from(domain).toString('hex')
-  return `dd${randomPart}${domainHex}`
+  return `ee${randomPart}${domainHex}`
 }
 
 // Создание tg:// ссылки для подключения
@@ -124,7 +124,7 @@ export function isValidPort(port: number): boolean {
 export function isValidSecret(secret: string): boolean {
   if (secret.length < 32) return false
   if (secret.startsWith('dd') || secret.startsWith('ee')) {
-    return /^[dD]{2}[a-fA-F0-9]{32}[a-fA-F0-9]*$/.test(secret)
+    return /^[dDeE]{2}[a-fA-F0-9]{32}[a-fA-F0-9]*$/.test(secret)
   }
   return /^[a-fA-F0-9]{32}$/.test(secret)
 }

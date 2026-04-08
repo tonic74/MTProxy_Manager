@@ -251,6 +251,74 @@ function escapeMarkdown(text) {
 bot.launch()
 console.log('MTProxy Manager Bot запущен!')
 
+// Опрос изменений из админ панели (Vercel) для VPS
+async function startSyncLoop() {
+  const fs = require('fs');
+  const { execSync } = require('child_process');
+  
+  console.log('Запуск агента синхронизации конфигураций с Vercel...');
+  
+  setInterval(async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const ipResponse = await fetch('https://ifconfig.me/ip', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const externalIp = (await ipResponse.text()).trim();
+      
+      const response = await fetch(`${ADMIN_API_URL}/api/proxies`);
+      const data = await response.json();
+      if (!data.success) return;
+      
+      const myProxy = data.data.find(p => p.server_ip === externalIp);
+      if (!myProxy) return; // Этот сервер не найден в БД
+      
+      const dockerComposePath = '/opt/mtproxy/docker-compose.yml';
+      if (!fs.existsSync(dockerComposePath)) return;
+      
+      let dockerCompose = fs.readFileSync(dockerComposePath, 'utf8');
+      
+      const matchSecret = dockerCompose.match(/SECRET=([a-zA-Z0-9]+)/);
+      const matchPort = dockerCompose.match(/- "(\d+):443"/);
+      
+      const localSecret = matchSecret ? matchSecret[1] : null;
+      const localPort = matchPort ? parseInt(matchPort[1], 10) : null;
+      
+      if (localSecret !== myProxy.secret || localPort !== myProxy.port) {
+         console.log(`[SYNC] Обнаружено изменение. Секрет: ${localSecret} -> ${myProxy.secret}, Порт: ${localPort} -> ${myProxy.port}`);
+         
+         // Обновление docker-compose.yml
+         dockerCompose = dockerCompose.replace(/SECRET=[a-zA-Z0-9]+/, `SECRET=${myProxy.secret}`);
+         dockerCompose = dockerCompose.replace(/- "\d+:443"/, `- "${myProxy.port}:443"`);
+         fs.writeFileSync(dockerComposePath, dockerCompose);
+         
+         // Обновление config txt для пользователя
+         const configTxtPath = '/opt/mtproxy/proxy-config.txt';
+         if (fs.existsSync(configTxtPath)) {
+             let cfg = fs.readFileSync(configTxtPath, 'utf8');
+             cfg = cfg.replace(/Secret: .*/, `Secret: ${myProxy.secret}`);
+             cfg = cfg.replace(/Port: .*/, `Port: ${myProxy.port}`);
+             cfg = cfg.replace(/tg:\/\/proxy\?.*/, myProxy.tg_link);
+             cfg = cfg.replace(/https:\/\/t\.me\/proxy\?.*/, myProxy.web_link);
+             fs.writeFileSync(configTxtPath, cfg);
+         }
+         
+         // Перезапуск контейнера
+         execSync('cd /opt/mtproxy && docker-compose up -d', { stdio: 'inherit' });
+         console.log('[SYNC] Новая конфигурация успешно применена локально.');
+      }
+    } catch (e) {
+      // Игнорируем сетевые ошибки, чтобы не засорять логи каждые 30 секунд
+      if (e.name !== 'AbortError' && !e.message.includes('fetch failed')) {
+         console.error('[SYNC ERROR]:', e.message);
+      }
+    }
+  }, 30000);
+}
+
+startSyncLoop();
+
 // Graceful shutdown
 process.once('SIGINT', () => bot.stop('SIGINT'))
 process.once('SIGTERM', () => bot.stop('SIGTERM'))
